@@ -14,5 +14,5 @@ library(rstan)       # R interface to Stan
 ## 1 [READ IN DATA] ------------------------------------------------------------
 # Remember to change your path
 # Read in recovery dataframe
-rec <- as.data.frame(fread(here::here("./data/cleaned_recoveries.csv")))
+rec <- as.data.frame(fread(here::here("./data/processed/recoveries.csv")))
 
