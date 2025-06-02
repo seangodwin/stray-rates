@@ -104,8 +104,8 @@ rec$rel.basin <- loc$basin[match(rec$rel.loc.code, loc$loc.code)]
 rec <- rec %>% 
           relocate(age, .after = species) %>%
           relocate(rec.year, .after = last.rel.year) %>%
-          relocate(rel.loc.code, rel.region, rel.basin, rel.lat, rel.lon,
-                   .after = stock.loc.code) %>%
+          relocate(rel.loc.code, rel.state, rel.region, rel.basin, rel.lat, 
+                   rel.lon, .after = stock.loc.code) %>%
           relocate(rec.loc.code, rec.region, rec.basin, rec.lat, rec.lon,
                    .after = rel.lon)
 
@@ -237,6 +237,11 @@ rec.locs <- rec.locs[rec.locs$ws.id != ws.remove]
 
 # Remove recovery data when release or recovery watersheds are NA
 rec <- rec[is.na(rec$rec.ws.id)==F & is.na(rec$rel.ws.id)==F,]
+
+# Reorder columns, just 'cause
+rec <- rec %>%
+  relocate(rel.ws.id, .after = rel.basin) %>%
+  relocate(rec.ws.id, .after = rec.basin)
 
 # For the map, remove recovery locations not associated with a watershed
 rec.locs <- rec.locs[is.na(rec.locs$ws.id)==F,]

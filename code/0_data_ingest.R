@@ -36,8 +36,8 @@ library(data.table)  # for faster data reading/combining
 #     domain, then all the regions within it
 # For some domains and regions, there were too many observations, so I had to 
 #     subset by year as well
-# If you do it from this url instead, you miss out on some release columns, and 
-#     need to remember to filter out tag status != 1 (i.e., recovered)
+# If you do it from this url instead, you miss out on some key release columns,
+#     and need to remember to filter out tag status != 1 (i.e., recovered)
 #     https://www.rmis.org/cgi-bin/queryfrm.mpl?Table=all_recoveries&Version=4.2
 
 # Find filenames
