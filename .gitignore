@@ -1,5 +1,6 @@
-# Specific files
+# Specific paths
 stray-rates.Rproj
+./outputs/figs/archived/
 
 # History files
 .Rhistory
