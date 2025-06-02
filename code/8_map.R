@@ -1,4 +1,4 @@
-# 1_data_wrangling.R
+# 8_map.R
 # Author: Sean Godwin
 # Date: 2025-06-02
 # Description: Get the recovery datafile ready to go
@@ -11,16 +11,16 @@ library(terra)       # spatial data manipulation
 
 ## 1 [READ IN DATA] ------------------------------------------------------------
 # Load nonspatial dataframes
-load(here::here("data/cleaned_nonspatial_data.RData"))
+rec <- as.data.frame(fread(here::here("./data/processed/recoveries.csv")))
 
 # Read in spatial data
-states <- vect(here::here("data/spatial/processed_states.gpkg"))
-provinces <- vect(here::here("data/spatial/processed_provinces.gpkg"))
-riv.bc <- vect(here::here("data/spatial/processed_rivers_bc.gpkg"))
-riv.us <- vect(here::here("data/spatial/processed_rivers_us.gpkg"))
-ws <- vect(here::here("data/spatial/processed_watersheds.gpkg"))
-rec.locs <- vect(here::here("data/spatial/processed_recovery_locations.gpkg"))
-bath <- rast(here::here("./data/spatial/gebco_2024.tif"))
+states <- vect(here::here("data/processed/states.gpkg"))
+provinces <- vect(here::here("data/processed/provinces.gpkg"))
+riv.bc <- vect(here::here("data/processed/rivers_bc.gpkg"))
+riv.us <- vect(here::here("data/processed/rivers_us.gpkg"))
+ws <- vect(here::here("data/processed/watersheds.gpkg"))
+rec.locs <- vect(here::here("data/processed/recovery_locations.gpkg"))
+bath <- rast(here::here("./data/processed/bathymetry.tif"))
 
 
 ## 2 [MAP INPUTS] --------------------------------------------------------------
@@ -56,7 +56,7 @@ y.range <- c(37,60)
 
 
 ## 3 [MAP] ---------------------------------------------------------------------
-tiff(here::here("./plots/recovery_locations.tiff"), width=6, height=10, units="in",
+tiff(here::here("./outputs/figs/recovery_locations.tiff"), width=6, height=10, units="in",
      pointsize=20, res=600, compression="lzw")
 par(mar=c(0,0,0,0), tck=-0.03, mgp=c(3,0.5,0), family="sans")
   

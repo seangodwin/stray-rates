@@ -15,7 +15,7 @@ library(sf)          # old spatial functions
 ## 1 [READ IN NONSPATIAL DATA] -------------------------------------------------
 # Remember to change your path
 # Read in recovery data
-rec <- as.data.frame(fread(here::here("./data/recoveries_raw.csv")))
+rec <- as.data.frame(fread(here::here("./data/raw/recoveries.csv")))
 
 # So much we don't need, and it gets annoying, so trim:
 rec <- rec[,c('recovery_date', 'species', 'tag_code', 'brood_year', 'fishery', 
@@ -33,7 +33,7 @@ colnames(rec) <- c('rec.date', 'species', 'tag.code', 'brood.year', 'fishery',
 # By checking off all options in the 'Location Type' query criterion
 # For some reason this gives RMIS regions & basins, whereas the main file
 #     ("LC042_ALL_FULLSET.csv") does not
-loc <- read.csv(here::here("./data/locations_raw.csv"), 
+loc <- read.csv(here::here("./data/raw/locations.csv"), 
                 header=T, stringsAsFactors=F)
 
 # Trim as well
@@ -45,7 +45,7 @@ colnames(loc) <- c('loc.code', 'loc.type', 'loc.name', 'region',
 
 # Release datafile was downloaded as "RL042_ALL_FULLSET.csv" from:
 #     https://www.rmpc.org/data-selection/rmis-files/
-rel <- read.csv(here::here("./data/releases_raw.csv"), 
+rel <- read.csv(here::here("./data/raw/releases.csv"), 
                 header=T, stringsAsFactors=F)
 # Trim as well
 rel <- rel[,c('submission_date', 'tag_code_or_release_id', 'tag_type', 
@@ -168,12 +168,12 @@ crs.meters <- "EPSG:5070"    # Different CRS, in meters
   
 # Make SpatVectors for states and provinces
 # From here: https://www.weather.gov/gis/AWIPSspatial
-states <- vect(here::here("./data/spatial/s_18mr25.shp"))
-provinces <- vect(here::here("./data/spatial/province.shp"))
+states <- vect(here::here("./data/raw/spatial/s_18mr25.shp"))
+provinces <- vect(here::here("./data/raw/spatial/province.shp"))
 
 # Make SpatVector for rivers
-riv.bc <- vect(here::here("./data/spatial/c1w_rivers/c1w_NHN_NLFLOW_Strahler_pacific_3979.gpkg"))
-riv.us <- vect(here::here("./data/spatial/nhdplus_rivers/NHDPlusV21_National_Seamless_Flattened_Lower48.gdb"), layer = "NHDFlowline_Network")
+riv.bc <- vect(here::here("./data/raw/spatial/c1w_rivers/c1w_NHN_NLFLOW_Strahler_pacific_3979.gpkg"))
+riv.us <- vect(here::here("./data/raw/spatial/nhdplus_rivers/NHDPlusV21_National_Seamless_Flattened_Lower48.gdb"), layer = "NHDFlowline_Network")
 
 # Remove everything except California and PNW
 riv.us <- riv.us[riv.us$VPUID %in% c("18", "17"),]
@@ -191,7 +191,7 @@ riv.us <- riv.us[riv.us$strahler > 4,]
 # Make SpatVector for watersheds 
 # From here: https://databasin.org/datasets/cd69ec510558421eb908d078f59e241c/
 # Unfortunately missing most of AK, so would be good to expand if possible
-ws <- vect(here::here("./data/spatial/na_bas_15s_beta.shp"))
+ws <- vect(here::here("./data/raw/spatial/na_bas_15s_beta.shp"))
 names(ws) <- c("ws.id", "area")
 
 # Make SpatVector for unique release locations
@@ -248,28 +248,30 @@ riv.bc <- riv.bc[riv.bc$ws.id %in% unique(rec.locs$ws.id),]
 riv.us <- riv.us[riv.us$ws.id %in% unique(rec.locs$ws.id),]
 
 # Raster bathymetry
-bath <- rast(here::here("./data/spatial/gebco_2024.tif"))
+bath <- rast(here::here("./data/raw/spatial/gebco_2024.tif"))
 
 
 ## 4 [WRITE DATA] --------------------------------------------------------------
-# Store non-spatial dataframes
-save(rec, rel, loc, file = here::here("data/cleaned_nonspatial_data.RData"))
+# Write non-spatial dataframes
+write.csv(rec, here::here("./data/processed/recoveries.csv"), quote=F, row.names=F)
+write.csv(rel, here::here("./data/processed/releases.csv"), quote=F, row.names=F)
+write.csv(loc, here::here("./data/processed/locations.csv"), quote=F, row.names=F)
+
+# save(rec, rel, loc, file = here::here("data/cleaned_nonspatial_data.RData"))
 
 # Ugly for now
-writeVector(states, here::here("data/spatial/processed_states.gpkg"), 
+writeVector(states, here::here("./data/processed/states.gpkg"), 
             overwrite = TRUE)
-writeVector(provinces, here::here("data/spatial/processed_provinces.gpkg"), 
+writeVector(provinces, here::here("./data/processed/provinces.gpkg"), 
             overwrite = TRUE)
-writeVector(riv.bc, here::here("data/spatial/processed_rivers_bc.gpkg"), 
+writeVector(riv.bc, here::here("./data/processed/rivers_bc.gpkg"), 
             overwrite = TRUE)
-writeVector(riv.us, here::here("data/spatial/processed_rivers_us.gpkg"), 
+writeVector(riv.us, here::here("./data/processed/rivers_us.gpkg"), 
             overwrite = TRUE)
-writeVector(ws, here::here("data/spatial/processed_watersheds.gpkg"), 
+writeVector(ws, here::here("./data/processed/watersheds.gpkg"), 
             overwrite = TRUE)
-writeVector(rec.locs, here::here("data/spatial/processed_recovery_locations.gpkg"), 
+writeVector(rec.locs, here::here("./data/processed/recovery_locations.gpkg"), 
             overwrite = TRUE)
-writeRaster(bathymetry, here::here("data/spatial/processed_recovery_locations.gpkg"), 
-            overwrite = TRUE)
-writeRaster(bath, here::here("data/spatial/processed_bathymetry.tif"), 
+writeRaster(bath, here::here("./data/processed/bathymetry.tif"), 
             overwrite = TRUE, filetype  = "GTiff")
 
