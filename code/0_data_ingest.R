@@ -40,6 +40,9 @@ library(data.table)  # for faster data reading/combining
 #     and need to remember to filter out tag status != 1 (i.e., recovered)
 #     https://www.rmis.org/cgi-bin/queryfrm.mpl?Table=all_recoveries&Version=4.2
 
+# Temporarily set root manually for Marty's cluster
+set_here("/home/maddie/sean/")
+
 # Find filenames
 rec.files <- list.files(path = here::here("./data/raw/recovery-data-minifiles/"), 
                         pattern = "recoveries", 

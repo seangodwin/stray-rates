@@ -14,6 +14,9 @@ library(sf)          # old spatial functions
 
 ## 1 [READ IN NONSPATIAL DATA] -------------------------------------------------
 # Remember to change your path
+# Temporarily set root manually for Marty's cluster
+set_here("/home/maddie/sean/")
+
 # Read in recovery data
 rec <- as.data.frame(fread(here::here("./data/raw/recoveries.csv")))
 
@@ -36,8 +39,7 @@ colnames(rec) <- c('rec.date', 'species', 'tag.code', 'brood.year', 'fishery',
 loc <- read.csv(here::here("./data/raw/locations.csv"), 
                 header=T, stringsAsFactors=F)
 
-# Trim as well
-# For now I'll keep rmis lats/lons, but should figure out the difference
+# Trim
 loc <- loc[,c('location_code', 'location_type', 'name', 'rmis_region', 
               'rmis_basin', 'rmis_latitude', 'rmis_longitude'),]
 colnames(loc) <- c('loc.code', 'loc.type', 'loc.name', 'region',
@@ -47,7 +49,7 @@ colnames(loc) <- c('loc.code', 'loc.type', 'loc.name', 'region',
 #     https://www.rmpc.org/data-selection/rmis-files/
 rel <- read.csv(here::here("./data/raw/releases.csv"), 
                 header=T, stringsAsFactors=F)
-# Trim as well
+# Trim
 rel <- rel[,c('submission_date', 'tag_code_or_release_id', 'tag_type', 
               'species', 'run', 'brood_year', 'first_release_date', 
               'last_release_date', 'release_location_code', 
@@ -161,19 +163,38 @@ rec <- rec[rec$species == 1,]
 #              !(rec$rec.basin %in% basin.exc),]
 
 
-## 3 [SPATIAL DATA] ------------------------------------------------------------
-# CRS projection
-crs.latlon <- "EPSG:4326"    # WGS84, in lat lon
-crs.meters <- "EPSG:5070"    # Different CRS, in meters
-  
-# Make SpatVectors for states and provinces
-# From here: https://www.weather.gov/gis/AWIPSspatial
+## 3 [READ IN SPATIAL DATA] ------------------------------------------------------------
+# States and provinces
+    # From here: https://www.weather.gov/gis/AWIPSspatial
 states <- vect(here::here("./data/raw/spatial/s_18mr25.shp"))
 provinces <- vect(here::here("./data/raw/spatial/province.shp"))
 
-# Make SpatVector for rivers
-riv.bc <- vect(here::here("./data/raw/spatial/c1w_rivers/c1w_NHN_NLFLOW_Strahler_pacific_3979.gpkg"))
-riv.us <- vect(here::here("./data/raw/spatial/nhdplus_rivers/NHDPlusV21_National_Seamless_Flattened_Lower48.gdb"), layer = "NHDFlowline_Network")
+# Rivers, from:
+  # https://open.canada.ca/data/dataset/1c0e8a4e-952c-cd7a-1be8-29691aea2cd1
+  # https://www.epa.gov/waterdata/nhdplus-national-data
+riv.bc <- vect(here::here("./data/raw/spatial/c1w_rivers/
+                          c1w_NHN_NLFLOW_Strahler_pacific_3979.gpkg"))
+riv.us <- vect(here::here("./data/raw/spatial/nhdplus_rivers/
+                          NHDPlusV21_National_Seamless_Flattened_Lower48.gdb"), 
+               layer = "NHDFlowline_Network")
+
+##### FUTURE CHECK
+# Watersheds, from:
+    # https://databasin.org/datasets/cd69ec510558421eb908d078f59e241c/
+    # Unfortunately missing most of AK, so it would be good to expand
+    # if possible to keep the northern Alaska recovery data
+ws <- vect(here::here("./data/raw/spatial/na_bas_15s_beta.shp"))
+names(ws) <- c("ws.id", "area")
+
+# Bathymetry, from:
+    # https://download.gebco.net/
+bath <- rast(here::here("./data/raw/spatial/gebco_2024.tif"))
+
+
+## 4 [FORMAT SPATIAL DATA] ------------------------------------------------------------
+# CRS projection
+crs.latlon <- "EPSG:4326"    # WGS84, in lat lon
+crs.meters <- "EPSG:5070"    # Different CRS, in meters
 
 # Remove everything except California and PNW
 riv.us <- riv.us[riv.us$VPUID %in% c("18", "17"),]
@@ -187,12 +208,6 @@ names(riv.us) <- c("riv.id", "strahler")
 # Remove small streams for now
 riv.bc <- riv.bc[riv.bc$strahler > 4,]
 riv.us <- riv.us[riv.us$strahler > 4,]
-
-# Make SpatVector for watersheds 
-# From here: https://databasin.org/datasets/cd69ec510558421eb908d078f59e241c/
-# Unfortunately missing most of AK, so would be good to expand if possible
-ws <- vect(here::here("./data/raw/spatial/na_bas_15s_beta.shp"))
-names(ws) <- c("ws.id", "area")
 
 # Make SpatVector for unique release locations
 rel.summ <- as.data.frame(rec %>% 
@@ -252,19 +267,20 @@ riv.us$ws.id <- extract(ws, riv.us)$ws.id
 riv.bc <- riv.bc[riv.bc$ws.id %in% unique(rec.locs$ws.id),]
 riv.us <- riv.us[riv.us$ws.id %in% unique(rec.locs$ws.id),]
 
-# Raster bathymetry
-bath <- rast(here::here("./data/raw/spatial/gebco_2024.tif"))
+# Add column for whether fish strayed or not
+rec$strayed <- as.integer(rec$rel.ws.id != rec$rec.ws.id)
 
 
-## 4 [WRITE DATA] --------------------------------------------------------------
-# Write non-spatial dataframes
-write.csv(rec, here::here("./data/processed/recoveries.csv"), quote=F, row.names=F)
-write.csv(rel, here::here("./data/processed/releases.csv"), quote=F, row.names=F)
-write.csv(loc, here::here("./data/processed/locations.csv"), quote=F, row.names=F)
+## 5 [WRITE DATA] --------------------------------------------------------------
+# Non-spatial data
+write.csv(rec, here::here("./data/processed/recoveries.csv"), 
+          quote=F, row.names=F)
+write.csv(rel, here::here("./data/processed/releases.csv"), 
+          quote=F, row.names=F)
+write.csv(loc, here::here("./data/processed/locations.csv"), 
+          quote=F, row.names=F)
 
-# save(rec, rel, loc, file = here::here("data/cleaned_nonspatial_data.RData"))
-
-# Ugly for now
+# Spatial data
 writeVector(states, here::here("./data/processed/states.gpkg"), 
             overwrite = TRUE)
 writeVector(provinces, here::here("./data/processed/provinces.gpkg"), 
