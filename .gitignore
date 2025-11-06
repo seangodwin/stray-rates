@@ -1,3 +1,6 @@
+# Data folder
+data/
+
 # Specific paths
 stray-rates.Rproj
 ./outputs/figs/archived/
