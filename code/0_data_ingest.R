@@ -1,4 +1,4 @@
-# 0_data_ingest.R test
+# 0_data_ingest.R
 # Author: Sean Godwin
 # Date: 2025-05-09
 # Description: Combine all the small RMIS files for salmon tag recoveries
