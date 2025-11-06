@@ -14,8 +14,8 @@ library(sf)          # old spatial functions
 
 ## 1 [READ IN NONSPATIAL DATA] -------------------------------------------------
 # Remember to change your path
-# Temporarily set root manually for Marty's cluster
-set_here("/home/maddie/sean/")
+# Identify root directory
+here::i_am("code/1_data_prep.R")
 
 # Read in recovery data
 rec <- as.data.frame(fread(here::here("./data/raw/recoveries.csv")))
@@ -63,6 +63,7 @@ colnames(rel) <- c('sub.date', 'tag.code.or.release.id', 'tag.type',
 
 
 ## 2 [FORMAT NONSPATIAL DATA] --------------------------------------------------
+# All this is ugly AF but I'm doing quickly
 # Match in recovery locations
 rec$rec.region <- 
         loc$region[match(rec$rec.loc.code, loc$loc.code)]
@@ -78,7 +79,7 @@ rec$age <- rec$rec.year - rec$brood.year
 rec$rel.loc.code <- rel$rel.loc.code[match(rec$tag.code, 
                                            rel$tag.code.or.release.id)]
 
-# Same with lats/lons
+# Same with lats/lons 
 rec$rel.lat <- loc$lat[match(rec$rel.loc.code, loc$loc.code)]
 rec$rel.lon <- loc$lon[match(rec$rel.loc.code, loc$loc.code)]
 rec$rec.lat <- loc$lat[match(rec$rec.loc.code, loc$loc.code)]
@@ -117,9 +118,11 @@ rec %>% group_by(samp.maturity) %>% summarize(n=n())
 rec <- rec[rec$samp.maturity != 1,]
 
 ##### FUTURE CHECK 
-# Remove <=2 year old fish for all species except pink (<=1 year old for pink)
+# For now, remove <=2 year old fish for all species except pink (<=1 year old)
 #     to ensure we're not getting recaps of juveniles not gone to sea
 # Also remove unrealistic ages
+# Species: 1 = Chinook, 2 = coho, 3 = steelhead, 4 = sockeye, 5 = chum, 6= pink
+#          7 = masu, 8 = cutthroat, 9 = Atlantic
 rec %>% group_by(species, age) %>% summarize(n=n()) %>% print(n = Inf)
 rec <- rec %>%
        filter((species == 6 & age ==2) | 
@@ -131,8 +134,6 @@ rec <- rec[rec$brood.year <= 2018,]
 
 # Only keep Chinook for now, as it's the only one with good sample size 
 #     across the whole time series
-# Species: 1 = Chinook, 2 = coho, 3 = steelhead, 4 = sockeye, 5 = chum, 6= pink
-#          7 = masu, 8 = cutthroat, 9 = Atlantic
 rec %>% group_by(species, age) %>% summarize(n=n()) %>% print(n = Inf)
 rec <- rec[rec$species == 1,]
 
@@ -163,7 +164,7 @@ rec <- rec[rec$species == 1,]
 #              !(rec$rec.basin %in% basin.exc),]
 
 
-## 3 [READ IN SPATIAL DATA] ------------------------------------------------------------
+## 3 [READ IN SPATIAL DATA] ----------------------------------------------------
 # States and provinces
     # From here: https://www.weather.gov/gis/AWIPSspatial
 states <- vect(here::here("./data/raw/spatial/s_18mr25.shp"))
@@ -172,10 +173,8 @@ provinces <- vect(here::here("./data/raw/spatial/province.shp"))
 # Rivers, from:
   # https://open.canada.ca/data/dataset/1c0e8a4e-952c-cd7a-1be8-29691aea2cd1
   # https://www.epa.gov/waterdata/nhdplus-national-data
-riv.bc <- vect(here::here("./data/raw/spatial/c1w_rivers/
-                          c1w_NHN_NLFLOW_Strahler_pacific_3979.gpkg"))
-riv.us <- vect(here::here("./data/raw/spatial/nhdplus_rivers/
-                          NHDPlusV21_National_Seamless_Flattened_Lower48.gdb"), 
+riv.bc <- vect(here::here("./data/raw/spatial/c1w_rivers/c1w_NHN_NLFLOW_Strahler_pacific_3979.gpkg"))
+riv.us <- vect(here::here("./data/raw/spatial/nhdplus_rivers/NHDPlusV21_National_Seamless_Flattened_Lower48.gdb"), 
                layer = "NHDFlowline_Network")
 
 ##### FUTURE CHECK

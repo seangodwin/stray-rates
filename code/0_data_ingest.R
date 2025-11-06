@@ -1,4 +1,4 @@
-# 0_data_merging.R
+# 0_data_ingest.R
 # Author: Sean Godwin
 # Date: 2025-05-09
 # Description: Combine all the small RMIS files for salmon tag recoveries
@@ -40,8 +40,8 @@ library(data.table)  # for faster data reading/combining
 #     and need to remember to filter out tag status != 1 (i.e., recovered)
 #     https://www.rmis.org/cgi-bin/queryfrm.mpl?Table=all_recoveries&Version=4.2
 
-# Temporarily set root manually for Marty's cluster
-set_here("/home/maddie/sean/")
+# Identify root directory
+here::i_am("code/0_data_ingest.R")
 
 # Find filenames
 rec.files <- list.files(path = here::here("./data/raw/recovery-data-minifiles/"), 
@@ -84,4 +84,4 @@ rec$stock_location_name <- gsub(",", "", rec$stock_location_name)
 
 
 ## 3 [WRITE DATA] --------------------------------------------------------------
-write.csv(rec, here::here("./data/raw/recoveries_raw.csv"), quote=F, row.names=F)
+write.csv(rec, here::here("./data/raw/recoveries.csv"), quote=F, row.names=F)

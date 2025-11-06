@@ -1,4 +1,4 @@
-# 8_map.R
+# 9_map.R
 # Author: Sean Godwin
 # Date: 2025-06-02
 # Description: Get the recovery datafile ready to go
@@ -10,6 +10,9 @@ library(terra)       # spatial data manipulation
 
 
 ## 1 [READ IN DATA] ------------------------------------------------------------
+# Identify root directory
+here::i_am("code/9_fit_model.R")
+
 # Load nonspatial dataframes
 rec <- as.data.frame(fread(here::here("./data/processed/recoveries.csv")))
 
